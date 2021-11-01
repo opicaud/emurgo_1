@@ -1,4 +1,6 @@
 # Emurgo ethereum project : A proposal to improve commitment in a community
+# A proposal to improve commitment in a community
+
 
 A community need a strong commitment from its member in order to grow.  
 For example, coming to community meetings, participating to overall projects ...
@@ -52,6 +54,4 @@ Rewards are calculated based on
 
 ### Technically
 Commitment is a ERC20 utility token with a given supply.
-
-
 
