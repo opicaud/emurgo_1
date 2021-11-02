@@ -7,12 +7,18 @@ contract Community {
         uint eventsToDo ;
 
     }
+    bool public isEventActive ;
 
     mapping(address => CommittedMember) public members;
 
     function becomeCommitted(uint events) public {
        members[msg.sender] = CommittedMember(events);
     }
+
+    function startEvent() public {
+        isEventActive = true;
+    }
+
 }
 
 

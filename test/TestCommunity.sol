@@ -15,10 +15,17 @@ contract TestCommunity {
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
     }
 
+    //TODO: add persona in the test
     function test_should_become_a_committed_member_for_a_number_of_events() public {
         uint events = 5;
         community.becomeCommitted(events);
         Assert.equal(community.members(address(this)), events, "Error : number of committed event not correct");
+    }
+
+    function test_owner_should_start_a_community_event_() public {
+        Assert.equal(community.isEventActive(), false, "Error : before starting an event, event must be inactive");
+        community.startEvent();
+        Assert.equal(community.isEventActive(), true, "Error : after starting an event, event must be active");
     }
 
 }
