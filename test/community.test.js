@@ -54,7 +54,7 @@ contract('Community', (accounts) => {
                 })
             })
             describe('When he decides to close the event', async () =>{
-                xit('Then the stop of the event is contracted', async () => {
+                it('Then the close of the event is contracted', async () => {
                     await community.closeEvent();
                     assert.equal(await community.events(0), false)
                     assert.equal(await community.events(1), false)
