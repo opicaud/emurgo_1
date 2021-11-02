@@ -17,13 +17,21 @@ contract TestCommunity {
     function test_member_should_become_a_committed_member_for_a_number_of_events() public {
         uint events = 5;
         community.becomeCommitted(events);
-        Assert.equal(community.members(address(this)), events, "Error : number of committed event not correct");
+        uint eventCommitted = community.members(address (this));
+        Assert.equal(eventCommitted, events, "Error : number of committed event not correct");
     }
 
     function test_owner_should_start_a_community_event_() public {
-        Assert.equal(community.isEventActive(), false, "Error : before starting an event, event must be inactive");
         community.startEvent();
-        Assert.equal(community.isEventActive(), true, "Error : after starting an event, event must be active");
+        bool active = community.events(0);
+        Assert.equal(active, true, "Error : after starting an event, event must be active");
     }
+
+    function test_members_should_give_their_feedback() public {
+        community.setCurrentEventFeedback(5);
+        uint eventFeedback = community.getCurrentEventFeedback();
+        Assert.equal(eventFeedback, 5,"Error : incorrect feedback");
+    }
+
 
 }

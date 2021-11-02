@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 contract Community {
-
+    address owner;
     struct CommittedMember  {
         uint eventsToCommit;
-
     }
-    bool public isEventActive ;
-    address owner;
     mapping(address => CommittedMember) public members;
+
+    struct Event {
+        bool active;
+        mapping(address => uint) feedbacks;
+    }
+    uint eventId;
+    mapping(uint => Event) public events;
 
     constructor(){
         owner = msg.sender;
+        Event storage currentEvent = events[eventId];
     }
 
     function becomeCommitted(uint eventsToCommit) public {
@@ -21,8 +26,16 @@ contract Community {
 
     function startEvent() public {
         require(msg.sender == owner,"Only owner can start an event");
-        require(isEventActive == false, "An existing event is already active, you must close it before starting a new one");
-        isEventActive = true;
+        require(events[eventId].active == false, "An existing event is already active, you must close it before starting a new one");
+        events[eventId].active = true;
+    }
+
+    function setCurrentEventFeedback(uint feedback) public {
+        events[eventId].feedbacks[msg.sender] = feedback;
+    }
+
+    function getCurrentEventFeedback() public view returns (uint){
+        return events[eventId].feedbacks[msg.sender];
     }
 
 }
