@@ -3,7 +3,6 @@
 pragma solidity >=0.4.25 <=0.8.4;
 
 import "truffle/Assert.sol";
-import "truffle/DeployedAddresses.sol";
 import "../contracts/Community.sol";
 
 contract TestCommunity {
@@ -11,7 +10,7 @@ contract TestCommunity {
     Community community;
 
     function beforeEach() public {
-        community = Community(DeployedAddresses.Community());
+        community = new Community();
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
     }
 
