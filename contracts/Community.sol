@@ -31,7 +31,7 @@ contract Community {
     }
 
     function closeEvent() public {
-        require(msg.sender == owner,"Only owner can start an event");
+        require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].active == true, "An existing event must be active before stopping it");
         events[eventId].active = false;
         eventId++;

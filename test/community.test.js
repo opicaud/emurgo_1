@@ -26,8 +26,10 @@ contract('Community', (accounts) => {
                     })
                 })
                 describe('When '+ member.name + ' wants to stop an event', async () => {
-                    xit('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
-
+                    it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
+                        assert.equal(await community.events(0), false)
+                        await truffleAssert.reverts(community.closeEvent( {from: member.account}),
+                            "Only owner can stop an event")
                     })
                 })
             })
