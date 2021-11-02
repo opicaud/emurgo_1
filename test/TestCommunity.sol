@@ -27,6 +27,13 @@ contract TestCommunity {
         Assert.equal(active, true, "Error : after starting an event, event must be active");
     }
 
+    function test_owner_should_stop_a_community_event_() public {
+        community.startEvent();
+        community.closeEvent();
+        bool active = community.events(0);
+        Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
+    }
+
     function test_members_should_give_their_feedback() public {
         community.setCurrentEventFeedback(5);
         uint eventFeedback = community.getCurrentEventFeedback();

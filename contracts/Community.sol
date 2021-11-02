@@ -17,7 +17,6 @@ contract Community {
 
     constructor(){
         owner = msg.sender;
-        Event storage currentEvent = events[eventId];
     }
 
     function becomeCommitted(uint eventsToCommit) public {
@@ -27,7 +26,15 @@ contract Community {
     function startEvent() public {
         require(msg.sender == owner,"Only owner can start an event");
         require(events[eventId].active == false, "An existing event is already active, you must close it before starting a new one");
-        events[eventId].active = true;
+        Event storage newEvent = events[eventId];
+        newEvent.active = true;
+    }
+
+    function closeEvent() public {
+        require(msg.sender == owner,"Only owner can start an event");
+        require(events[eventId].active == true, "An existing event must be active before stopping it");
+        events[eventId].active = false;
+        eventId++;
     }
 
     function setCurrentEventFeedback(uint feedback) public {

@@ -25,6 +25,11 @@ contract('Community', (accounts) => {
                             "Only owner can start an event")
                     })
                 })
+                describe('When '+ member.name + ' wants to stop an event', async () => {
+                    xit('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
+
+                    })
+                })
             })
         })
         describe('Given the owner of the community', async () => {
@@ -43,6 +48,30 @@ contract('Community', (accounts) => {
                         await community.setCurrentEventFeedback(member.eventFeedback, {from: member.account});
                         const feedback = await community.getCurrentEventFeedback({from: member.account})
                         assert.equal(feedback, member.eventFeedback)
+                    })
+                })
+            })
+            describe('When he decides to close the event', async () =>{
+                xit('Then the stop of the event is contracted', async () => {
+                    await community.closeEvent();
+                    assert.equal(await community.events(0), false)
+                    assert.equal(await community.events(1), false)
+                })
+                xit('Then ' + members.length + ' has participated to the event', async () => {
+
+                })
+                xit('Then a number of AM token is distributed to the event', async () => {
+
+                })
+                members.forEach(member => {
+                    xit('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {
+
+                    })
+                    xit('Then ' + member.name + ' can not give their feedback to any events', async () => {
+
+                    })
+                    xit('Then ' + member.name + ' receive a number of AM token', async () => {
+
                     })
                 })
             })
