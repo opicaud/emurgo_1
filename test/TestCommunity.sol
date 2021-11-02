@@ -23,14 +23,14 @@ contract TestCommunity {
 
     function test_owner_should_start_a_community_event_() public {
         community.startEvent();
-        bool active = community.events(0);
+        (bool active,) = community.events(0);
         Assert.equal(active, true, "Error : after starting an event, event must be active");
     }
 
     function test_owner_should_stop_a_community_event_() public {
         community.startEvent();
         community.closeEvent();
-        bool active = community.events(0);
+        (bool active,) = community.events(0);
         Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
     }
 
@@ -38,6 +38,16 @@ contract TestCommunity {
         community.setCurrentEventFeedback(5);
         uint eventFeedback = community.getCurrentEventFeedback();
         Assert.equal(eventFeedback, 5,"Error : incorrect feedback");
+    }
+
+    function test_should_know_the_number_of_participants() public {
+        community.startEvent();
+        community.setCurrentEventFeedback(5);
+        community.closeEvent();
+        (,uint participants) = community.events(0);
+        Assert.equal(participants, 1,"Error : incorrect number of participants");
+
+
     }
 
 

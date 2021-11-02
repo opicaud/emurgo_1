@@ -1,7 +1,19 @@
 const Community = artifacts.require("Community.sol");
 const truffleAssert = require('truffle-assertions');
 
+
+
 contract('Community', (accounts) => {
+    async function fetchEvent(id) {
+        const event = await community.events(id);
+
+        return {
+            active: event['0'],
+            participants: event['1'].toNumber()
+        }
+
+    }
+
     let community;
     const members = [
         {name: "Alice", account: accounts[1], committedEvents: 6, eventFeedback: 5},
@@ -20,14 +32,14 @@ contract('Community', (accounts) => {
                 })
                 describe('When '+ member.name + ' wants to start an event', async () => {
                     it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
-                        assert.equal(await community.events(0), false)
+                        assert.equal((await fetchEvent(0)).active, false)
                         await truffleAssert.reverts(community.startEvent( {from: member.account}),
                             "Only owner can start an event")
                     })
                 })
                 describe('When '+ member.name + ' wants to stop an event', async () => {
                     it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
-                        assert.equal(await community.events(0), false)
+                        assert.equal((await fetchEvent(0)).active, false)
                         await truffleAssert.reverts(community.closeEvent( {from: member.account}),
                             "Only owner can stop an event")
                     })
@@ -37,9 +49,10 @@ contract('Community', (accounts) => {
         describe('Given the owner of the community', async () => {
             describe('When he decides to start an event', async () => {
                 it('Then the start of the event is contracted', async () => {
-                    assert.equal(await community.events(0), false)
+                    assert.equal((await fetchEvent(0)).active, false)
                     await community.startEvent();
-                    assert.equal(await community.events(0), true)
+                    assert.equal((await fetchEvent(0)).active, true)
+
                 })
                 it('And only one event can be started at same time', async () => {
                     await truffleAssert.reverts(community.startEvent(),
@@ -56,11 +69,11 @@ contract('Community', (accounts) => {
             describe('When he decides to close the event', async () =>{
                 it('Then the close of the event is contracted', async () => {
                     await community.closeEvent();
-                    assert.equal(await community.events(0), false)
-                    assert.equal(await community.events(1), false)
+                    assert.equal((await fetchEvent(0)).active, false)
+                    assert.equal((await fetchEvent(1)).active, false)
                 })
-                xit('Then ' + members.length + ' has participated to the event', async () => {
-
+                it('Then ' + members.length + ' has participated to the event', async () => {
+                    assert.equal((await fetchEvent(0)).participants, 3)
                 })
                 xit('Then a number of AM token is distributed to the event', async () => {
 

@@ -10,6 +10,7 @@ contract Community {
 
     struct Event {
         bool active;
+        uint participants;
         mapping(address => uint) feedbacks;
     }
     uint eventId;
@@ -39,6 +40,7 @@ contract Community {
 
     function setCurrentEventFeedback(uint feedback) public {
         events[eventId].feedbacks[msg.sender] = feedback;
+        events[eventId].participants++;
     }
 
     function getCurrentEventFeedback() public view returns (uint){
