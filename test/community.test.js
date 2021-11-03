@@ -79,8 +79,9 @@ contract('Community', (accounts) => {
 
                 })
                 members.forEach(member => {
-                    xit('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {
-
+                    it('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {
+                        const choice= await community.members(member.account)
+                        assert.equal(choice.toNumber(), member.committedEvents - 1)
                     })
                     xit('Then ' + member.name + ' can not give their feedback to any events', async () => {
 

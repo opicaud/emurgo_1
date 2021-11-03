@@ -11,6 +11,7 @@ contract Community {
     struct Event {
         bool active;
         uint participants;
+        address[] voters;
         mapping(address => uint) feedbacks;
     }
     uint eventId;
@@ -35,16 +36,26 @@ contract Community {
         require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].active == true, "An existing event must be active before stopping it");
         events[eventId].active = false;
+        updateMembersCommitment();
         eventId++;
     }
 
     function setCurrentEventFeedback(uint feedback) public {
         events[eventId].feedbacks[msg.sender] = feedback;
+        events[eventId].voters.push(msg.sender);
         events[eventId].participants++;
     }
 
     function getCurrentEventFeedback() public view returns (uint){
         return events[eventId].feedbacks[msg.sender];
+    }
+
+    function updateMembersCommitment() private {
+        for(uint i=0;i<events[eventId].participants;i++){
+            if(members[events[eventId].voters[i]].eventsToCommit > 1 ){
+                members[events[eventId].voters[i]].eventsToCommit--;
+            }
+        }
     }
 
 }
