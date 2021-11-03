@@ -13,7 +13,7 @@ contract TestCommunity {
         community = new Community();
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
         community.startEvent(10);
-        (,,uint expectedParticipants) = community.events(0);
+        (,,uint expectedParticipants,) = community.events(0);
         Assert.equal(expectedParticipants,10, "Error : incorrect number of expected participants");
 
     }
@@ -26,13 +26,13 @@ contract TestCommunity {
     }
 
     function test_owner_should_start_a_community_event_() public {
-        (bool active,,) = community.events(0);
+        (bool active,,,) = community.events(0);
         Assert.equal(active, true, "Error : after starting an event, event must be active");
     }
 
-    function test_owner_should_stop_a_community_event_() public {
+    function test_owner_should_close_a_community_event() public {
         community.closeEvent();
-        (bool active,,) = community.events(0);
+        (bool active,,,) = community.events(0);
         Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
     }
 
@@ -45,7 +45,7 @@ contract TestCommunity {
     function test_should_know_the_number_of_participants() public {
         community.setCurrentEventFeedback(5);
         community.closeEvent();
-        (,uint participants,) = community.events(0);
+        (,uint participants,,) = community.events(0);
         Assert.equal(participants, 1,"Error : incorrect number of participants");
     }
 
@@ -55,6 +55,13 @@ contract TestCommunity {
         community.closeEvent();
         uint eventCommitted = community.members(address (this));
         Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
+    }
+
+    function test_make_reward_calculus() public {
+        community.setCurrentEventFeedback(5);
+        community.closeEvent();
+        (,,,uint reward) = community.events(0);
+        Assert.equal(reward, 50000,"Error : incorrect number events to commit");
     }
 
 

@@ -10,7 +10,8 @@ contract('Community', (accounts) => {
         return {
             active: event['0'],
             participants: event['1'].toNumber(),
-            expectedParticipants: event['2'].toNumber()
+            expectedParticipants: event['2'].toNumber(),
+            reward: event['3'].toNumber()
         }
 
     }
@@ -80,8 +81,12 @@ contract('Community', (accounts) => {
                 it('Then ' + members.length + ' has participated to the event', async () => {
                     assert.equal((await fetchEvent(0)).participants, 3)
                 })
-                xit('Then a number of AM token is distributed to the event', async () => {
-
+                it('Then a number of AM token is distributed to the event', async () => {
+                    const event = await fetchEvent(0)
+                    let totalFeedback = 0
+                    members.forEach(member => totalFeedback+=member.eventFeedback)
+                    const rewardExpected = (Math.trunc(event.participants / event.expectedParticipants) + Math.trunc(totalFeedback / event.participants))*10000
+                    assert.equal(event.reward, rewardExpected)
                 })
                 members.forEach(member => {
                     it('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {

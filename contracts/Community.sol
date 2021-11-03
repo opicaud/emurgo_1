@@ -11,8 +11,9 @@ contract Community {
     struct Event {
         bool active;
         uint participants;
-        address[] voters;
         uint expectedParticipants;
+        uint rewards;
+        address[] voters;
         mapping(address => uint) feedbacks;
     }
     uint eventId;
@@ -38,6 +39,7 @@ contract Community {
         require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].active == true, "An existing event must be active before stopping it");
         events[eventId].active = false;
+        events[eventId].rewards = makeRewardCalculus();
         updateMembersCommitment();
         eventId++;
     }
@@ -59,6 +61,23 @@ contract Community {
                 members[events[eventId].voters[i]].eventsToCommit--;
             }
         }
+    }
+
+    function makeRewardCalculus() private view returns (uint)  {
+        uint rewardFromParticipants = events[eventId].participants / events[eventId].expectedParticipants;
+        return (rewardFromParticipants + rewardFromFeedback()) * 10000;
+    }
+
+    function rewardFromFeedback() private view returns (uint) {
+       return events[eventId].participants > 0 ? meanFeedback() : 0;
+    }
+
+    function meanFeedback() private view returns (uint){
+        uint totalFeedback;
+        for(uint i=0;i<events[eventId].participants;i++){
+            totalFeedback += events[eventId].feedbacks[events[eventId].voters[i]];
+        }
+        return totalFeedback / events[eventId].participants ;
     }
 
 }
