@@ -9,7 +9,8 @@ contract('Community', (accounts) => {
 
         return {
             active: event['0'],
-            participants: event['1'].toNumber()
+            participants: event['1'].toNumber(),
+            expectedParticipants: event['2'].toNumber()
         }
 
     }
@@ -19,6 +20,8 @@ contract('Community', (accounts) => {
         {name: "Alice", account: accounts[1], committedEvents: 6, eventFeedback: 5},
         {name: "Bob", account: accounts[2], committedEvents: 5, eventFeedback:3},
         {name: "Charles", account: accounts[3], committedEvents: 3, eventFeedback:2}]
+    const expectedPeople = 10;
+
     describe('Given a Community', async () => {
         community = await Community.deployed()
         describe('Given some community member', async () => {
@@ -33,7 +36,7 @@ contract('Community', (accounts) => {
                 describe('When '+ member.name + ' wants to start an event', async () => {
                     it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
                         assert.equal((await fetchEvent(0)).active, false)
-                        await truffleAssert.reverts(community.startEvent( {from: member.account}),
+                        await truffleAssert.reverts(community.startEvent(expectedPeople, {from: member.account}),
                             "Only owner can start an event")
                     })
                 })
@@ -47,15 +50,17 @@ contract('Community', (accounts) => {
             })
         })
         describe('Given the owner of the community', async () => {
-            describe('When he decides to start an event', async () => {
+            describe('When he decides to start an event with 10 expected people', async () => {
                 it('Then the start of the event is contracted', async () => {
                     assert.equal((await fetchEvent(0)).active, false)
-                    await community.startEvent();
+                    await community.startEvent(expectedPeople);
                     assert.equal((await fetchEvent(0)).active, true)
+                    assert.equal((await fetchEvent(0)).expectedParticipants, expectedPeople)
+
 
                 })
                 it('And only one event can be started at same time', async () => {
-                    await truffleAssert.reverts(community.startEvent(),
+                    await truffleAssert.reverts(community.startEvent(expectedPeople),
                         "An existing event is already active, you must close it before starting a new one")
                 })
                 members.forEach(member => {

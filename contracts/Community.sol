@@ -12,6 +12,7 @@ contract Community {
         bool active;
         uint participants;
         address[] voters;
+        uint expectedParticipants;
         mapping(address => uint) feedbacks;
     }
     uint eventId;
@@ -25,10 +26,11 @@ contract Community {
        members[msg.sender] = CommittedMember(eventsToCommit);
     }
 
-    function startEvent() public {
+    function startEvent(uint expectedPeople) public {
         require(msg.sender == owner,"Only owner can start an event");
         require(events[eventId].active == false, "An existing event is already active, you must close it before starting a new one");
         Event storage newEvent = events[eventId];
+        newEvent.expectedParticipants = expectedPeople;
         newEvent.active = true;
     }
 
