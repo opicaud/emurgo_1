@@ -4,13 +4,15 @@ pragma solidity >=0.4.25 <=0.8.4;
 
 import "truffle/Assert.sol";
 import "../contracts/Community.sol";
+import "../contracts/CommunityToken.sol";
 
 contract TestCommunity {
 
     Community community;
 
     function beforeEach() public {
-        community = new Community();
+        ERC20 token = new CommunityToken();
+        community = new Community(address(token));
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
         community.startEvent(10);
         (,,uint expectedParticipants,) = community.events(0);

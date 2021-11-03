@@ -1,4 +1,5 @@
 const Community = artifacts.require("Community.sol");
+const CommunityToken = artifacts.require("CommunityToken.sol")
 const truffleAssert = require('truffle-assertions');
 
 
@@ -16,7 +17,8 @@ contract('Community', (accounts) => {
 
     }
 
-    let community;
+    let community, communityToken;
+    const totalSupply = 1000000;
     const members = [
         {name: "Alice", account: accounts[1], committedEvents: 6, eventFeedback: 5},
         {name: "Bob", account: accounts[2], committedEvents: 5, eventFeedback:3},
@@ -25,6 +27,13 @@ contract('Community', (accounts) => {
 
     describe('Given a Community', async () => {
         community = await Community.deployed()
+        communityToken = await CommunityToken.deployed();
+        describe('Given a tokeneconomy of the community', async () => {
+            it('Its token has a supply of ' + totalSupply, async() => {
+                const totalSupplyExpected = await communityToken.totalSupply();
+                assert.equal(totalSupplyExpected.toNumber(), totalSupply);
+            })
+        })
         describe('Given some community member', async () => {
             members.forEach(member => {
                 describe('When '+ member.name + ' commit to come to '+member.committedEvents + ' events', async () => {

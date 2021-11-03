@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Community {
     address owner;
@@ -18,8 +19,10 @@ contract Community {
     }
     uint eventId;
     mapping(uint => Event) public events;
+    ERC20 token;
 
-    constructor(){
+    constructor(address communityToken){
+        token = ERC20(address(communityToken));
         owner = msg.sender;
     }
 
