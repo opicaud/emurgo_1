@@ -83,7 +83,10 @@ contract('Community', (accounts) => {
                         const choice= await community.members(member.account)
                         assert.equal(choice.toNumber(), member.committedEvents - 1)
                     })
-                    xit('Then ' + member.name + ' can not give their feedback to any events', async () => {
+                    it('Then ' + member.name + ' can not give their feedback to any events', async () => {
+                        await truffleAssert.reverts(
+                            community.setCurrentEventFeedback(member.eventFeedback, {from: member.account}),
+                            "To give your feedback, an event must be active");
 
                     })
                     xit('Then ' + member.name + ' receive a number of AM token', async () => {

@@ -34,7 +34,8 @@ contract TestCommunity {
         Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
     }
 
-    function test_members_should_give_their_feedback() public {
+    function test_members_should_give_their_feedback_only_when_event_is_active() public {
+        community.startEvent();
         community.setCurrentEventFeedback(5);
         uint eventFeedback = community.getCurrentEventFeedback();
         Assert.equal(eventFeedback, 5,"Error : incorrect feedback");

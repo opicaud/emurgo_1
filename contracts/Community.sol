@@ -41,6 +41,7 @@ contract Community {
     }
 
     function setCurrentEventFeedback(uint feedback) public {
+        require(events[eventId].active == true,"To give your feedback, an event must be active");
         events[eventId].feedbacks[msg.sender] = feedback;
         events[eventId].voters.push(msg.sender);
         events[eventId].participants++;
