@@ -32,6 +32,7 @@ contract('Community', (accounts) => {
             it('Its token has a supply of ' + totalSupply, async() => {
                 const totalSupplyExpected = await communityToken.totalSupply();
                 assert.equal(totalSupplyExpected.toNumber(), totalSupply);
+                await communityToken.increaseAllowance(community.address, 100000);
             })
         })
         describe('Given some community member', async () => {

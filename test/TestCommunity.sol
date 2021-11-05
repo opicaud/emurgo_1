@@ -9,11 +9,13 @@ import "../contracts/CommunityToken.sol";
 contract TestCommunity {
 
     Community community;
-
+    ERC20 token;
     function beforeEach() public {
-        ERC20 token = new CommunityToken();
+        token = new CommunityToken();
         community = new Community(address(token));
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
+        token.increaseAllowance(address(community), 100000);
+        Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
         community.startEvent(10);
         (,,uint expectedParticipants,) = community.events(0);
         Assert.equal(expectedParticipants,10, "Error : incorrect number of expected participants");
@@ -64,6 +66,7 @@ contract TestCommunity {
         community.closeEvent();
         (,,,uint reward) = community.events(0);
         Assert.equal(reward, 50000,"Error : incorrect number events to commit");
+        Assert.equal(token.balanceOf(address(community)), 50000, "");
     }
 
 

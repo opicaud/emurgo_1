@@ -43,6 +43,7 @@ contract Community {
         require(events[eventId].active == true, "An existing event must be active before stopping it");
         events[eventId].active = false;
         events[eventId].rewards = makeRewardCalculus();
+        token.transferFrom(msg.sender, address(this), events[eventId].rewards);
         updateMembersCommitment();
         eventId++;
     }
