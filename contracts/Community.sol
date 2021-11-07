@@ -6,6 +6,7 @@ contract Community {
     address owner;
     struct CommittedMember  {
         uint eventsToCommit;
+        uint rewards;
     }
     mapping(address => CommittedMember) public members;
 
@@ -14,6 +15,7 @@ contract Community {
         uint participants;
         uint expectedParticipants;
         uint rewards;
+        address[] committedParticipants;
         address[] voters;
         mapping(address => uint) feedbacks;
     }
@@ -27,7 +29,7 @@ contract Community {
     }
 
     function becomeCommitted(uint eventsToCommit) external {
-       members[msg.sender] = CommittedMember(eventsToCommit);
+       members[msg.sender] = CommittedMember(eventsToCommit,0);
     }
 
     function startEvent(uint expectedPeople) external {
@@ -49,22 +51,24 @@ contract Community {
     function updateEvent(uint feedback) external {
         require(events[eventId].open == true,"To give your feedback, an event must be active");
         require(feedback > 0, "feedback must be at least equal to 1");
+        if (members[msg.sender].eventsToCommit > 0 && events[eventId].feedbacks[msg.sender] == 0){
+            members[msg.sender].eventsToCommit--;
+            events[eventId].committedParticipants.push(msg.sender);
+        }
         if (events[eventId].feedbacks[msg.sender] == 0){
             events[eventId].participants++;
             events[eventId].voters.push(msg.sender);
-            updateMembersCommitment();
         }
+
         events[eventId].feedbacks[msg.sender] = feedback;
         events[eventId].rewards = assignReward();
 
-    }
-
-
-    function updateMembersCommitment() private {
-            if(members[msg.sender].eventsToCommit > 1 ){
-                members[msg.sender].eventsToCommit--;
+        for (uint i=0;i<events[eventId].committedParticipants.length;i++){
+            members[events[eventId].committedParticipants[i]].rewards = 50000;
         }
+
     }
+
 
     function assignReward() private view returns (uint)  {
         uint rewardFromParticipants = events[eventId].participants / events[eventId].expectedParticipants;

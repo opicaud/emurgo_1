@@ -23,8 +23,13 @@ contract TestCommunity {
     }
 
     function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
-        uint eventCommitted = community.members(address (this));
+        (uint eventCommitted,) = community.members(address (this));
         Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
+    }
+
+    function test_committed_members_who_has_participated_should_receive_potential_reward() public {
+        (,uint rewards) = community.members(address (this));
+        Assert.equal(rewards, 50000,"Error : incorrect reward");
     }
 
     function test_event_should_have_a_number_of_expected_participants() public{

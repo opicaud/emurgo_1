@@ -17,6 +17,16 @@ contract('Community', (accounts) => {
 
     }
 
+    async function fetchMember(address) {
+        const event = await community.members(address)
+
+        return {
+            eventsToCommit: event['0'].toNumber(),
+            rewards: event['1'].toNumber()
+        }
+
+    }
+
     let community, communityToken;
     const totalSupply = 1000000;
     const members = [
@@ -40,8 +50,8 @@ contract('Community', (accounts) => {
                 describe('When '+ member.name + ' commit to come to '+member.committedEvents + ' events', async () => {
                     it('Then ' + member.name + '\'s commitment is contracted'  , async () => {
                         await community.becomeCommitted(member.committedEvents, {from: member.account})
-                        const choice= await community.members(member.account)
-                        assert.equal(choice.toNumber(), member.committedEvents)
+                        const updatedMember= await fetchMember(member.account)
+                        assert.equal(updatedMember.eventsToCommit, member.committedEvents)
                     })
                 })
                 describe('When '+ member.name + ' wants to start an event', async () => {
@@ -67,8 +77,6 @@ contract('Community', (accounts) => {
                     await community.startEvent(expectedPeople);
                     assert.equal((await fetchEvent(0)).active, true)
                     assert.equal((await fetchEvent(0)).expectedParticipants, expectedPeople)
-
-
                 })
                 it('And only one event can be started at same time', async () => {
                     await truffleAssert.reverts(community.startEvent(expectedPeople),
@@ -98,8 +106,8 @@ contract('Community', (accounts) => {
                 })
                 members.forEach(member => {
                     it('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {
-                        const choice= await community.members(member.account)
-                        assert.equal(choice.toNumber(), member.committedEvents - 1)
+                        const updatedMember= await fetchMember(member.account)
+                        assert.equal(updatedMember.eventsToCommit, member.committedEvents - 1)
                     })
                     it('Then ' + member.name + ' can not give their feedback to any events', async () => {
                         await truffleAssert.reverts(
