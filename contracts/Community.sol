@@ -10,14 +10,14 @@ contract Community {
     mapping(address => CommittedMember) public members;
 
     struct Event {
-        bool active;
+        bool open;
         uint participants;
         uint expectedParticipants;
         uint rewards;
         address[] voters;
         mapping(address => uint) feedbacks;
     }
-    uint eventId;
+    uint public eventId ;
     mapping(uint => Event) public events;
     ERC20 token;
 
@@ -32,22 +32,23 @@ contract Community {
 
     function startEvent(uint expectedPeople) external {
         require(msg.sender == owner,"Only owner can start an event");
-        require(events[eventId].active == false, "An existing event is already active, you must close it before starting a new one");
+        require(events[eventId].open == false, "An existing event is already active, you must close it before starting a new one");
         Event storage newEvent = events[eventId];
         newEvent.expectedParticipants = expectedPeople;
-        newEvent.active = true;
+        newEvent.open = true;
     }
 
     function closeEvent() external {
         require(msg.sender == owner,"Only owner can stop an event");
-        require(events[eventId].active == true, "An existing event must be active before stopping it");
-        events[eventId].active = false;
+        require(events[eventId].open == true, "An existing event must be active before stopping it");
+        events[eventId].open = false;
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
         eventId++;
     }
 
-    function setCurrentEventFeedback(uint feedback) external {
-        require(events[eventId].active == true,"To give your feedback, an event must be active");
+    function updateEvent(uint feedback) external {
+        require(events[eventId].open == true,"To give your feedback, an event must be active");
+        require(feedback > 0, "feedback must be at least equal to 1");
         if (events[eventId].feedbacks[msg.sender] == 0){
             events[eventId].participants++;
             events[eventId].voters.push(msg.sender);
@@ -56,10 +57,6 @@ contract Community {
         events[eventId].feedbacks[msg.sender] = feedback;
         events[eventId].rewards = assignReward();
 
-    }
-
-    function getCurrentEventFeedback() public view returns (uint){
-        return events[eventId].feedbacks[msg.sender];
     }
 
 

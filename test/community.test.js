@@ -76,9 +76,7 @@ contract('Community', (accounts) => {
                 })
                 members.forEach(member => {
                     it('And ' + member.name + ' can give their feedback about the event' , async () => {
-                        await community.setCurrentEventFeedback(member.eventFeedback, {from: member.account});
-                        const feedback = await community.getCurrentEventFeedback({from: member.account})
-                        assert.equal(feedback, member.eventFeedback)
+                        await community.updateEvent(member.eventFeedback, {from: member.account});
                     })
                 })
             })
@@ -105,7 +103,7 @@ contract('Community', (accounts) => {
                     })
                     it('Then ' + member.name + ' can not give their feedback to any events', async () => {
                         await truffleAssert.reverts(
-                            community.setCurrentEventFeedback(member.eventFeedback, {from: member.account}),
+                            community.updateEvent(member.eventFeedback, {from: member.account}),
                             "To give your feedback, an event must be active");
 
                     })

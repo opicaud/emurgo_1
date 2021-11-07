@@ -13,11 +13,18 @@ contract TestCommunity {
     function beforeEach() public {
         token = new CommunityToken();
         community = new Community(address(token));
-        token.increaseAllowance(address(community), 100000);
-        community.startEvent(10);
         Assert.notEqual(address(community),address(0), "Error : contract not deployed");
+        token.increaseAllowance(address(community), 100000);
         Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
 
+        community.becomeCommitted(2);
+        community.startEvent(10);
+        community.updateEvent(5);
+    }
+
+    function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
+        uint eventCommitted = community.members(address (this));
+        Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
     }
 
     function test_event_should_have_a_number_of_expected_participants() public{
@@ -25,51 +32,25 @@ contract TestCommunity {
         Assert.equal(expectedParticipants,10, "Error : incorrect number of expected participants");
     }
 
-    function test_member_should_become_a_committed_member_for_a_number_of_events() public {
-        uint events = 5;
-        community.becomeCommitted(events);
-        uint eventCommitted = community.members(address (this));
-        Assert.equal(eventCommitted, events, "Error : number of committed event not correct");
+    function test_event_should_be_opened() public {
+        (bool opened,,,) = community.events(0);
+        Assert.equal(opened, true, "Error : after starting an event, event must be opened");
     }
 
-    function test_owner_should_start_a_community_event_() public {
-        (bool active,,,) = community.events(0);
-        Assert.equal(active, true, "Error : after starting an event, event must be active");
-    }
-
-    function test_owner_should_close_a_community_event() public {
-        community.setCurrentEventFeedback(5);
-        community.closeEvent();
-        (bool active,,,) = community.events(0);
-        Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
-        Assert.equal(token.balanceOf(address(community)), 50000, "balance of community is not correct");
-
-    }
-
-    function test_members_should_give_their_feedback() public {
-        community.setCurrentEventFeedback(5);
-        uint eventFeedback = community.getCurrentEventFeedback();
-        Assert.equal(eventFeedback, 5,"Error : incorrect feedback");
-    }
-
-    function test_should_know_the_number_of_participants() public {
-        community.setCurrentEventFeedback(5);
+    function test_event_should_have_the_number_of_participants() public {
         (,uint participants,,) = community.events(0);
         Assert.equal(participants, 1,"Error : incorrect number of participants");
     }
 
-    function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
-        community.becomeCommitted(2);
-        community.setCurrentEventFeedback(5);
-        uint eventCommitted = community.members(address (this));
-        Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
-    }
-
-    function test_make_reward_calculus() public {
-        community.setCurrentEventFeedback(5);
+    function test_event_should_have_a_reward_calculus() public {
         (,,,uint reward) = community.events(0);
-        Assert.equal(reward, 50000,"Error : incorrect number events to commit");
+        Assert.equal(reward, 50000,"Error : incorrect rewards");
     }
 
+    function test_event_should_be_closed() public {
+        community.closeEvent();
+        Assert.equal(token.balanceOf(address(community)), 50000, "balance of community is not correct");
+        Assert.equal(community.eventId(), 1, "id of next event is not correct");
 
+    }
 }
