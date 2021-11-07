@@ -54,6 +54,8 @@ contract TestCommunity {
 
     function test_event_should_be_closed() public {
         community.closeEvent();
+        (,uint reward) = community.members(address (this));
+        Assert.equal(reward, 0, "reward is incorrect");
         Assert.equal(token.balanceOf(address(this)), 1000000, "balance of test is not correct");
         Assert.equal(token.balanceOf(address(community)), 0, "balance of community is not correct");
         Assert.equal(community.eventId(), 1, "id of next event is not correct");

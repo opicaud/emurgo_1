@@ -46,9 +46,12 @@ contract Community {
         events[eventId].open = false;
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
         for (uint i=0;i<events[eventId].committedParticipants.length;i++){
-            members[events[eventId].committedParticipants[i]].eventsToCommit == 0 ?
-                token.transfer(events[eventId].committedParticipants[i],members[events[eventId].committedParticipants[i]].rewards)
-                    : token.transfer(events[eventId].committedParticipants[i],0);
+            if( members[events[eventId].committedParticipants[i]].eventsToCommit == 0) {
+                token.transfer(events[eventId].committedParticipants[i],members[events[eventId].committedParticipants[i]].rewards);
+                delete members[events[eventId].committedParticipants[i]];
+            } else {
+                token.transfer(events[eventId].committedParticipants[i],0);
+            }
         }
         eventId++;
     }

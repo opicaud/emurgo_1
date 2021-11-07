@@ -87,6 +87,13 @@ contract('Community', (accounts) => {
                         await community.updateEvent(member.eventFeedback, {from: member.account});
                     })
                 })
+                members.forEach(member => {
+                    it('Then members' + member.name + ' receive a potential number of AM token', async () => {
+                        const updatedMember = await fetchMember(member.account)
+                        const event = await fetchEvent(0)
+                        assert.equal(updatedMember.rewards, Math.trunc(event.reward / members.length))
+                    })
+                })
             })
             describe('When he decides to close the event', async () =>{
                 it('Then the close of the event is contracted', async () => {
@@ -114,20 +121,18 @@ contract('Community', (accounts) => {
                             community.updateEvent(member.eventFeedback, {from: member.account}),
                             "To give your feedback, an event must be active");
                     })
-                    it('Then ' + member.name + ' receive a potential number of AM token', async () => {
-                        const updatedMember= await fetchMember(member.account)
-                        const event = await fetchEvent(0)
-                        assert.equal(updatedMember.rewards, Math.trunc(event.reward / members.length) )
-                    })
 
                     it('Then ' + member.name + ' would have a balance of AM token', async () => {
                         const updatedMember= await fetchMember(member.account)
+                        const event = await fetchEvent(0)
                         const balance = await communityToken.balanceOf(member.account)
                         if(updatedMember.eventsToCommit !== 0){
                             assert.equal(balance.toNumber(),  0)
+                            assert.equal(updatedMember.rewards,  Math.trunc(event.reward / members.length))
                         }
                         else {
-                            assert.equal(balance.toNumber(),  updatedMember.rewards)
+                            assert.equal(balance.toNumber(), Math.trunc(event.reward / members.length) )
+                            assert.equal(updatedMember.rewards,  0)
                         }
                     })
                 })
