@@ -29,7 +29,9 @@ contract Community {
     }
 
     function becomeCommitted(uint eventsToCommit) external {
-       members[msg.sender] = CommittedMember(eventsToCommit,0);
+        require(eventsToCommit > 0,"member must commit to come at least 1 event");
+        require(eventsToCommit >= members[msg.sender].eventsToCommit,"member must commit come at least its today commitment");
+        members[msg.sender] = CommittedMember(eventsToCommit,0);
     }
 
     function startEvent(uint expectedPeople) external {
