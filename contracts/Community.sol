@@ -59,6 +59,7 @@ contract Community {
         return events[eventId].feedbacks[msg.sender];
     }
 
+
     function updateMembersCommitment() private {
         for(uint i=0;i<events[eventId].participants;i++){
             if(members[events[eventId].voters[i]].eventsToCommit > 1 ){

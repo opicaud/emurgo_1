@@ -13,13 +13,16 @@ contract TestCommunity {
     function beforeEach() public {
         token = new CommunityToken();
         community = new Community(address(token));
-        Assert.notEqual(address(community),address(0), "Error : contract not deployed");
         token.increaseAllowance(address(community), 100000);
-        Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
         community.startEvent(10);
+        Assert.notEqual(address(community),address(0), "Error : contract not deployed");
+        Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
+
+    }
+
+    function test_event_should_have_a_number_of_expected_participants() public{
         (,,uint expectedParticipants,) = community.events(0);
         Assert.equal(expectedParticipants,10, "Error : incorrect number of expected participants");
-
     }
 
     function test_member_should_become_a_committed_member_for_a_number_of_events() public {
@@ -40,7 +43,7 @@ contract TestCommunity {
         Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
     }
 
-    function test_members_should_give_their_feedback_only_when_event_is_active() public {
+    function test_members_should_give_their_feedback() public {
         community.setCurrentEventFeedback(5);
         uint eventFeedback = community.getCurrentEventFeedback();
         Assert.equal(eventFeedback, 5,"Error : incorrect feedback");
@@ -48,12 +51,11 @@ contract TestCommunity {
 
     function test_should_know_the_number_of_participants() public {
         community.setCurrentEventFeedback(5);
-        community.closeEvent();
         (,uint participants,,) = community.events(0);
         Assert.equal(participants, 1,"Error : incorrect number of participants");
     }
 
-    function test_commited_members_who_has_participated_has_one_less_event_to_commit() public {
+    function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
         community.becomeCommitted(2);
         community.setCurrentEventFeedback(5);
         community.closeEvent();
