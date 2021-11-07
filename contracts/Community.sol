@@ -45,6 +45,11 @@ contract Community {
         require(events[eventId].open == true, "An existing event must be active before stopping it");
         events[eventId].open = false;
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
+        for (uint i=0;i<events[eventId].committedParticipants.length;i++){
+            members[events[eventId].committedParticipants[i]].eventsToCommit == 0 ?
+                token.transfer(events[eventId].committedParticipants[i],members[events[eventId].committedParticipants[i]].rewards)
+                    : token.transfer(events[eventId].committedParticipants[i],0);
+        }
         eventId++;
     }
 

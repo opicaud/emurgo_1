@@ -17,14 +17,14 @@ contract TestCommunity {
         token.increaseAllowance(address(community), 100000);
         Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
 
-        community.becomeCommitted(2);
+        community.becomeCommitted(1);
         community.startEvent(10);
         community.updateEvent(5);
     }
 
     function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
         (uint eventCommitted,) = community.members(address (this));
-        Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
+        Assert.equal(eventCommitted, 0,"Error : incorrect number events to commit");
     }
 
     function test_committed_members_who_has_participated_should_receive_potential_reward() public {
@@ -54,8 +54,8 @@ contract TestCommunity {
 
     function test_event_should_be_closed() public {
         community.closeEvent();
-        Assert.equal(token.balanceOf(address(community)), 50000, "balance of community is not correct");
+        Assert.equal(token.balanceOf(address(this)), 1000000, "balance of test is not correct");
+        Assert.equal(token.balanceOf(address(community)), 0, "balance of community is not correct");
         Assert.equal(community.eventId(), 1, "id of next event is not correct");
-
     }
 }
