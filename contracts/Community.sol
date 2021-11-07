@@ -42,7 +42,6 @@ contract Community {
         require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].active == true, "An existing event must be active before stopping it");
         events[eventId].active = false;
-        events[eventId].rewards = makeRewardCalculus();
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
         eventId++;
     }
@@ -50,11 +49,12 @@ contract Community {
     function setCurrentEventFeedback(uint feedback) external {
         require(events[eventId].active == true,"To give your feedback, an event must be active");
         if (events[eventId].feedbacks[msg.sender] == 0){
+            events[eventId].participants++;
             events[eventId].voters.push(msg.sender);
             updateMembersCommitment();
-            events[eventId].participants++;
         }
         events[eventId].feedbacks[msg.sender] = feedback;
+        events[eventId].rewards = assignReward();
 
     }
 
@@ -69,7 +69,7 @@ contract Community {
         }
     }
 
-    function makeRewardCalculus() private view returns (uint)  {
+    function assignReward() private view returns (uint)  {
         uint rewardFromParticipants = events[eventId].participants / events[eventId].expectedParticipants;
         return (rewardFromParticipants + rewardFromFeedback()) * 10000;
     }

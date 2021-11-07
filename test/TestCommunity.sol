@@ -38,9 +38,12 @@ contract TestCommunity {
     }
 
     function test_owner_should_close_a_community_event() public {
+        community.setCurrentEventFeedback(5);
         community.closeEvent();
         (bool active,,,) = community.events(0);
         Assert.equal(active, false, "Error : after stoping an event, event must be inactive");
+        Assert.equal(token.balanceOf(address(community)), 50000, "balance of community is not correct");
+
     }
 
     function test_members_should_give_their_feedback() public {
@@ -64,10 +67,8 @@ contract TestCommunity {
 
     function test_make_reward_calculus() public {
         community.setCurrentEventFeedback(5);
-        community.closeEvent();
         (,,,uint reward) = community.events(0);
         Assert.equal(reward, 50000,"Error : incorrect number events to commit");
-        Assert.equal(token.balanceOf(address(community)), 50000, "");
     }
 
 
