@@ -58,7 +58,6 @@ contract TestCommunity {
     function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
         community.becomeCommitted(2);
         community.setCurrentEventFeedback(5);
-        community.closeEvent();
         uint eventCommitted = community.members(address (this));
         Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
     }
