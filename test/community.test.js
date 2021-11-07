@@ -113,10 +113,11 @@ contract('Community', (accounts) => {
                         await truffleAssert.reverts(
                             community.updateEvent(member.eventFeedback, {from: member.account}),
                             "To give your feedback, an event must be active");
-
                     })
-                    xit('Then ' + member.name + ' receive a number of AM token', async () => {
-
+                    it('Then ' + member.name + ' receive a number of AM token', async () => {
+                        const updatedMember= await fetchMember(member.account)
+                        const event = await fetchEvent(0)
+                        assert.equal(updatedMember.rewards, Math.trunc(event.reward / members.length) )
                     })
                 })
             })

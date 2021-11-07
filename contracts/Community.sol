@@ -64,7 +64,7 @@ contract Community {
         events[eventId].rewards = assignReward();
 
         for (uint i=0;i<events[eventId].committedParticipants.length;i++){
-            members[events[eventId].committedParticipants[i]].rewards = 50000;
+            members[events[eventId].committedParticipants[i]].rewards = events[eventId].rewards / events[eventId].committedParticipants.length;
         }
 
     }
