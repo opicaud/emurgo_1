@@ -6,7 +6,8 @@ contract Community {
     address owner;
     struct CommittedMember  {
         uint eventsToCommit;
-        uint rewards;
+        uint currentEventRewards;
+        uint lastEventRewards;
     }
     mapping(address => CommittedMember) public members;
 
@@ -31,7 +32,7 @@ contract Community {
     function becomeCommitted(uint eventsToCommit) external {
         require(eventsToCommit > 0,"member must commit to come at least 1 event");
         require(eventsToCommit >= members[msg.sender].eventsToCommit,"member must commit come at least its today commitment");
-        members[msg.sender] = CommittedMember(eventsToCommit,0);
+        members[msg.sender] = CommittedMember(eventsToCommit,0,0);
     }
 
     function startEvent(uint expectedPeople) external {
@@ -45,16 +46,19 @@ contract Community {
     function closeEvent() external {
         require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].open == true, "An existing event must be active before stopping it");
-        events[eventId].open = false;
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
         for (uint i=0;i<events[eventId].committedParticipants.length;i++){
-            if( members[events[eventId].committedParticipants[i]].eventsToCommit == 0) {
-                token.transfer(events[eventId].committedParticipants[i],members[events[eventId].committedParticipants[i]].rewards);
-                delete members[events[eventId].committedParticipants[i]];
+            address committedParticipants = events[eventId].committedParticipants[i];
+            if( members[committedParticipants].eventsToCommit == 0) {
+                uint totalReward = members[committedParticipants].currentEventRewards + members[committedParticipants].lastEventRewards;
+                token.transfer(committedParticipants,totalReward);
+                delete members[committedParticipants];
             } else {
-                token.transfer(events[eventId].committedParticipants[i],0);
+                members[committedParticipants].lastEventRewards += members[committedParticipants].currentEventRewards;
             }
+            members[committedParticipants].currentEventRewards = 0;
         }
+        events[eventId].open = false;
         eventId++;
     }
 
@@ -74,7 +78,7 @@ contract Community {
         events[eventId].rewards = assignReward();
 
         for (uint i=0;i<events[eventId].committedParticipants.length;i++){
-            members[events[eventId].committedParticipants[i]].rewards = events[eventId].rewards / events[eventId].committedParticipants.length;
+            members[events[eventId].committedParticipants[i]].currentEventRewards = events[eventId].rewards / events[eventId].committedParticipants.length;
         }
 
     }

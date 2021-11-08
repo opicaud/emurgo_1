@@ -2,11 +2,22 @@ const Community = artifacts.require("Community.sol");
 const CommunityToken = artifacts.require("CommunityToken.sol")
 const truffleAssert = require('truffle-assertions');
 
-
-
 contract('Community', (accounts) => {
+    let communityContract, communityToken;
+    async function fetchMember(address) {
+        const event = await communityContract.members(address)
+
+        return {
+            commitment: event['0'].toNumber(),
+            currentEventRewards: event['1'].toNumber(),
+            lastEventRewards: event['2'].toNumber()
+
+        }
+
+    }
+
     async function fetchEvent(id) {
-        const event = await community.events(id);
+        const event = await communityContract.events(id);
 
         return {
             active: event['0'],
@@ -16,127 +27,176 @@ contract('Community', (accounts) => {
         }
 
     }
+    const community = {
+        events: [{
+            before: {
+                new_committed_members: [{
+                        account: accounts[1], commitment: 3
+                    }, {
+                        account: accounts[2], commitment: 2
+                 }]
+            },
+            name: 'Event 1', participantExpected: 5,
+            during: {
+                feedbacks: [{
+                    account: accounts[1], feedback: 1
+                }, {
+                    account: accounts[2], feedback: 4
+                }, {
+                    account: accounts[3], feedback: 3
+                }, {
+                    account: accounts[4], feedback: 2
+                }]
+            },
+            after: {
+                members: [{
+                    account: accounts[1], committed: 'yes', commitment: 2, balance: 0, potential_rewards: 10000
+                }, {
+                    account: accounts[2], committed: 'yes', commitment: 1, balance: 0, potential_rewards: 10000
+                }, {
+                    account: accounts[3] ,committed: 'no', balance: 0, potential_rewards: 0,
+                }, {
+                    account: accounts[4] ,committed: 'no', balance: 0, potential_rewards: 0,
+                }],
+                community:{
+                    balance: 20000,
+                },
+                rewards: 20000
+            }
+        },{
+            before: {
+                new_committed_members:[{
+                        account: accounts[3] , commitment: 5,
+                    }
+                ]},
+            name: 'Event 2', participantExpected: 3,
+            during: {
+                feedbacks: [{
+                    account: accounts[2], feedback: 5
+                }, {
+                    account: accounts[3], feedback: 4
+                }, {
+                    account: accounts[4], feedback: 4
+                }, {
+                    account: accounts[5], feedback: 4
+                }, {
+                    account: accounts[6], feedback: 5
+                }, {
+                    account: accounts[7], feedback: 5
+                }]
+            },
+            after: {
+                members: [{
+                    account: accounts[1], committed: 'yes', commitment: 2, balance: 0, potential_rewards: 10000
+                }, {
+                    account: accounts[2], committed: 'yes', commitment: 0, balance: 40000, potential_rewards: 0
+                }, {
+                    account: accounts[3] ,committed: 'yes', commitment: 4, balance: 0, potential_rewards: 30000
+                },{
+                    account: accounts[4] ,committed: 'no', balance: 0, potential_rewards: 0
+                },{
+                    account: accounts[4] ,committed: 'no', balance: 0, potential_rewards: 0
+                },{
+                    account: accounts[5] ,committed: 'no', balance: 0, potential_rewards: 0
+                }, {
+                    account: accounts[6] ,committed: 'no', balance: 0, potential_rewards: 0
+                }, {
+                    account: accounts[7] ,committed: 'no', balance: 0, potential_rewards: 0
+                }
 
-    async function fetchMember(address) {
-        const event = await community.members(address)
-
-        return {
-            eventsToCommit: event['0'].toNumber(),
-            rewards: event['1'].toNumber()
-        }
-
+                ],
+                community:{
+                    balance: 40000,
+                },
+                rewards: 60000
+            }
+        }]
     }
 
-    let community, communityToken;
-    const totalSupply = 1000000;
-    const members = [
-        {name: "Alice", account: accounts[1], committedEvents: 6, eventFeedback: 5},
-        {name: "Bob", account: accounts[2], committedEvents: 5, eventFeedback:3},
-        {name: "Charles", account: accounts[3], committedEvents: 1, eventFeedback:2}]
-    const expectedPeople = 10;
-
     describe('Given a Community', async () => {
-        community = await Community.deployed()
+        communityContract = await Community.deployed()
         communityToken = await CommunityToken.deployed();
-        describe('Given a tokeneconomy of the community', async () => {
-            it('Its token has a supply of ' + totalSupply, async() => {
-                const totalSupplyExpected = await communityToken.totalSupply();
-                assert.equal(totalSupplyExpected.toNumber(), totalSupply);
-                await communityToken.increaseAllowance(community.address, 100000);
-            })
-        })
-        describe('Given some community member', async () => {
-            members.forEach(member => {
-                describe('When '+ member.name + ' commit to come to '+member.committedEvents + ' events', async () => {
-                    it('Then ' + member.name + '\'s commitment is contracted'  , async () => {
-                        await community.becomeCommitted(member.committedEvents, {from: member.account})
-                        const updatedMember= await fetchMember(member.account)
-                        assert.equal(updatedMember.eventsToCommit, member.committedEvents)
-                    })
-                })
-                describe('When '+ member.name + ' wants to start an event', async () => {
-                    it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
-                        assert.equal((await fetchEvent(0)).active, false)
-                        await truffleAssert.reverts(community.startEvent(expectedPeople, {from: member.account}),
-                            "Only owner can start an event")
-                    })
-                })
-                describe('When '+ member.name + ' wants to stop an event', async () => {
-                    it('Then ' + member.name + ' is disallowed to do it, she is not an owner', async () => {
-                        assert.equal((await fetchEvent(0)).active, false)
-                        await truffleAssert.reverts(community.closeEvent( {from: member.account}),
-                            "Only owner can stop an event")
-                    })
-                })
-            })
-        })
-        describe('Given the owner of the community', async () => {
-            describe('When he decides to start an event with 10 expected people', async () => {
-                it('Then the start of the event is contracted', async () => {
-                    assert.equal((await fetchEvent(0)).active, false)
-                    await community.startEvent(expectedPeople);
-                    assert.equal((await fetchEvent(0)).active, true)
-                    assert.equal((await fetchEvent(0)).expectedParticipants, expectedPeople)
-                })
-                it('And only one event can be started at same time', async () => {
-                    await truffleAssert.reverts(community.startEvent(expectedPeople),
-                        "An existing event is already active, you must close it before starting a new one")
-                })
-                members.forEach(member => {
-                    it('And ' + member.name + ' can give their feedback about the event' , async () => {
-                        await community.updateEvent(member.eventFeedback, {from: member.account});
-                    })
-                })
-                members.forEach(member => {
-                    it('Then members' + member.name + ' receive a potential number of AM token', async () => {
-                        const updatedMember = await fetchMember(member.account)
-                        const event = await fetchEvent(0)
-                        assert.equal(updatedMember.rewards, Math.trunc(event.reward / members.length))
-                    })
-                })
-            })
-            describe('When he decides to close the event', async () =>{
-                it('Then the close of the event is contracted', async () => {
-                    await community.closeEvent();
-                    assert.equal((await fetchEvent(0)).active, false)
-                    assert.equal((await fetchEvent(1)).active, false)
-                })
-                it('Then ' + members.length + ' has participated to the event', async () => {
-                    assert.equal((await fetchEvent(0)).participants, 3)
-                })
-                it('Then a number of AM token is distributed to the event', async () => {
-                    const event = await fetchEvent(0)
-                    let totalFeedback = 0
-                    members.forEach(member => totalFeedback+=member.eventFeedback)
-                    const rewardExpected = (Math.trunc(event.participants / event.expectedParticipants) + Math.trunc(totalFeedback / event.participants))*10000
-                    assert.equal(event.reward, rewardExpected)
-                })
-                members.forEach(member => {
-                    it('Then ' + member.name + ' has ' + eval(member.committedEvents - 1 )+ ' events to commit', async () => {
-                        const updatedMember= await fetchMember(member.account)
-                        assert.equal(updatedMember.eventsToCommit, member.committedEvents - 1)
-                    })
-                    it('Then ' + member.name + ' can not give their feedback to any events', async () => {
-                        await truffleAssert.reverts(
-                            community.updateEvent(member.eventFeedback, {from: member.account}),
-                            "To give your feedback, an event must be active");
-                    })
+        await communityToken.increaseAllowance(communityContract.address, 1000000);
 
-                    it('Then ' + member.name + ' would have a balance of AM token', async () => {
-                        const updatedMember= await fetchMember(member.account)
-                        const event = await fetchEvent(0)
-                        const balance = await communityToken.balanceOf(member.account)
-                        if(updatedMember.eventsToCommit !== 0){
-                            assert.equal(balance.toNumber(),  0)
-                            assert.equal(updatedMember.rewards,  Math.trunc(event.reward / members.length))
-                        }
-                        else {
-                            assert.equal(balance.toNumber(), Math.trunc(event.reward / members.length) )
-                            assert.equal(updatedMember.rewards,  0)
-                        }
+        community.events.forEach(event => {
+            event.before.new_committed_members.forEach(member => {
+                describe('When ' + member.account + ' is committed of '+ member.commitment + ' events', async () => {
+                    it('Then ' + member.account + '\'s commitment is contracted', async() => {
+                        await communityContract.becomeCommitted(member.commitment, {from: member.account})
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.commitment, member.commitment)
+                    })
+                });
+            })
+            describe('When the community is organising the event ' + event.name, async () => {
+                it('Then the start of the event is contracted with ' + event.participantExpected + ' expected participants', async () => {
+                    await communityContract.startEvent(event.participantExpected);
+                    const id = await communityContract.eventId()
+                    assert.equal((await fetchEvent(id.toNumber())).expectedParticipants, event.participantExpected)
+                })
+            });
+            event.during.feedbacks.forEach(feedback => {
+                describe('During the event, when member give their feedback', async () => {
+                    it('Then their feedback are contracted', async () => {
+                        await communityContract.updateEvent(feedback.feedback, {from: feedback.account});
+                    })
+                });
+            })
+            describe('After closing the event', async () => {
+                it('Then a reward is calculated for the event', async () => {
+                    const id = await communityContract.eventId()
+                    await communityContract.closeEvent();
+                    const closedEvent = await fetchEvent(id.toNumber());
+                    assert.equal(closedEvent.reward, event.after.rewards)
+                })
+                event.after.members.filter( member => member.committed === 'yes' && member.commitment > 0).forEach(member => {
+                    it('Then committed member ' + member.account +' commitment is updated', async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.commitment, member.commitment)
+                    })
+                    it('Then committed member ' + member.account +' have a potential reward of '+ member.potential_rewards , async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.lastEventRewards, member.potential_rewards)
+                    })
+                    it('Then committed member ' + member.account +' have a balance of ' + member.balance, async () => {
+                        const balance= await communityToken.balanceOf(member.account)
+                        assert.equal(balance.toNumber(), member.balance)
                     })
                 })
-            })
-        })
+                event.after.members.filter( member => member.committed === 'yes' && member.commitment === 0).forEach(member => {
+                    it('Then committed member ' + member.account +' commitment is 0', async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.commitment, 0)
+                    })
+                    it('Then committed member ' + member.account +' have a potential reward of 0', async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.lastEventRewards, 0)
+                    })
+                    it('Then committed member ' + member.account +' have a balance of ' + member.balance, async () => {
+                        const balance= await communityToken.balanceOf(member.account)
+                        assert.equal(balance.toNumber(), member.balance)
+                    })
+                })
+                event.after.members.filter( member => member.committed === 'no').forEach(member => {
+                    it('Then non committed member ' + member.account +' commitment is still 0', async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.commitment, 0)
+                    })
+                    it('Then non committed member ' + member.account +' receive a potential reward of 0', async () => {
+                        const committedMember= await fetchMember(member.account)
+                        assert.equal(committedMember.lastEventRewards, 0)
+                    })
+                    it('Then non committed member ' + member.account +' have a balance of ' + member.balance, async () => {
+                        const balance= await communityToken.balanceOf(member.account)
+                        assert.equal(balance.toNumber(), member.balance)
+                    })
+                })
+                it('Then balance of community is ' + event.after.community.balance, async () => {
+                    const balance= await communityToken.balanceOf(communityContract.address)
+                    assert.equal(balance.toNumber(), event.after.community.balance)
+                })
+
+            });
+        });
     });
 });

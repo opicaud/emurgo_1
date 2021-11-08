@@ -17,19 +17,19 @@ contract TestCommunity {
         token.increaseAllowance(address(community), 100000);
         Assert.equal(token.balanceOf(address(community)),0, "Error : balance of contract should be 0");
 
-        community.becomeCommitted(1);
+        community.becomeCommitted(2);
         community.startEvent(10);
         community.updateEvent(5);
     }
 
     function test_committed_members_who_has_participated_has_one_less_event_to_commit() public {
-        (uint eventCommitted,) = community.members(address (this));
-        Assert.equal(eventCommitted, 0,"Error : incorrect number events to commit");
+        (uint eventCommitted,,) = community.members(address (this));
+        Assert.equal(eventCommitted, 1,"Error : incorrect number events to commit");
     }
 
     function test_committed_members_who_has_participated_should_receive_potential_reward() public {
-        (,uint rewards) = community.members(address (this));
-        Assert.equal(rewards, 50000,"Error : incorrect reward");
+        (,uint currentEventRewards,) = community.members(address (this));
+        Assert.equal(currentEventRewards, 50000,"Error : incorrect reward");
     }
 
     function test_event_should_have_a_number_of_expected_participants() public{
@@ -54,10 +54,21 @@ contract TestCommunity {
 
     function test_event_should_be_closed() public {
         community.closeEvent();
-        (,uint reward) = community.members(address (this));
-        Assert.equal(reward, 0, "reward is incorrect");
-        Assert.equal(token.balanceOf(address(this)), 1000000, "balance of test is not correct");
-        Assert.equal(token.balanceOf(address(community)), 0, "balance of community is not correct");
-        Assert.equal(community.eventId(), 1, "id of next event is not correct");
+        (bool openeded,,,) = community.events(0);
+        Assert.equal(openeded, false, "event should be closed");
+        (,uint reward,uint lastEventRewards) = community.members(address (this));
+        Assert.equal(lastEventRewards, 50000,"Error : incorrect reward");
+        Assert.equal(reward, 0,"Error : incorrect reward");
+
+    }
+
+    function test_members_should_be_reward_when_commitment_is_finished() public {
+        community.closeEvent();
+        community.startEvent(5);
+        community.updateEvent(5);
+        community.closeEvent();
+        (,uint reward,uint lastEventRewards) = community.members(address (this));
+        Assert.equal(lastEventRewards, 0,"Error : incorrect reward");
+        Assert.equal(reward, 0,"Error : incorrect reward");
     }
 }
