@@ -5,7 +5,7 @@ const truffleAssert = require('truffle-assertions');
 contract('Community', (accounts) => {
     let communityContract, communityToken;
     async function fetchMember(address) {
-        const event = await communityContract.members(address)
+        const event = await communityContract.committedMembers(address)
 
         return {
             commitment: event['0'].toNumber(),
@@ -121,7 +121,7 @@ contract('Community', (accounts) => {
             event.before.new_committed_members.forEach(member => {
                 describe('When ' + member.account + ' is committed of '+ member.commitment + ' events', async () => {
                     it('Then ' + member.account + '\'s commitment is contracted', async() => {
-                        await communityContract.becomeCommitted(member.commitment, {from: member.account})
+                        await communityContract.swapToCommittedMember(member.commitment, {from: member.account})
                         const committedMember= await fetchMember(member.account)
                         assert.equal(committedMember.commitment, member.commitment)
                     })
@@ -130,7 +130,7 @@ contract('Community', (accounts) => {
             describe('When the community is organising the event ' + event.name, async () => {
                 it('Then the start of the event is contracted with ' + event.participantExpected + ' expected participants', async () => {
                     await communityContract.startEvent(event.participantExpected);
-                    const id = await communityContract.eventId()
+                    const id = await communityContract.currentEvent()
                     assert.equal((await fetchEvent(id.toNumber())).expectedParticipants, event.participantExpected)
                 })
             });
@@ -143,7 +143,7 @@ contract('Community', (accounts) => {
             })
             describe('After closing the event', async () => {
                 it('Then a reward is calculated for the event', async () => {
-                    const id = await communityContract.eventId()
+                    const id = await communityContract.currentEvent()
                     await communityContract.closeEvent();
                     const closedEvent = await fetchEvent(id.toNumber());
                     assert.equal(closedEvent.reward, event.after.rewards)
