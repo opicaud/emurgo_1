@@ -16,7 +16,7 @@ contract Community {
         uint expectedParticipants;
         uint rewards;
         address[] committedParticipants;
-        address[] participants;
+        address[] standardParticipants;
         mapping(address => uint) feedbacks;
     }
     uint public eventId ;
@@ -37,78 +37,99 @@ contract Community {
     function startEvent(uint expectedPeople) external {
         require(msg.sender == owner,"Only owner can start an event");
         require(events[eventId].open == false, "An existing event is already active, you must close it before starting a new one");
-        Event storage newEvent = events[eventId];
-        newEvent.expectedParticipants = expectedPeople;
-        newEvent.open = true;
+        initializeEvent(expectedPeople);
     }
 
+    function updateEvent(uint feedback) external {
+        require(events[eventId].open == true,"To give your feedback, an event must be active");
+        require(feedback > 0, "feedback must be at least equal to 1");
+
+        if (hasNotGivenHisFeedbackYet()){ addMemberAsEventParticipant();}
+        if (isCommittedMember() && hasNotGivenHisFeedbackYet()){ decreaseCommittedMemberCommitment();}
+
+        events[eventId].feedbacks[msg.sender] = feedback;
+        events[eventId].rewards = updateEventReward();
+        updateCommittedParticipantReward();
+
+    }
 
     function closeEvent() external {
         require(msg.sender == owner,"Only owner can stop an event");
         require(events[eventId].open == true, "An existing event must be active before stopping it");
         token.transferFrom(msg.sender, address(this), events[eventId].rewards);
-        for (uint i=0;i<events[eventId].committedParticipants.length;i++){
+        for (uint i=0;i< eventCommittedParticipantNumber();i++){
             address committedParticipant = events[eventId].committedParticipants[i];
-            if(memberHasFinishedHisCommitment(committedParticipant)) {
-                uint totalReward = members[committedParticipant].currentEventRewards + members[committedParticipant].lastEventRewards;
-                token.transfer(committedParticipant,totalReward);
-                delete members[committedParticipant];
-            } else {
-                members[committedParticipant].lastEventRewards += members[committedParticipant].currentEventRewards;
-            }
-            members[committedParticipant].currentEventRewards = 0;
+            memberHasFinishedHisCommitment(committedParticipant) ? transformCommittedMemberToStandardMember(committedParticipant) : keepCommittedMemberAsCommittedMember(committedParticipant);
         }
+        moveToNextEvent();
+    }
+
+
+    function updateCommittedParticipantReward() private {
+        uint eventRewards = events[eventId].rewards / eventCommittedParticipantNumber();
+        for (uint i=0;i< eventCommittedParticipantNumber();i++){
+            members[events[eventId].committedParticipants[i]].currentEventRewards = eventRewards;
+        }
+    }
+
+    function updateEventReward() private view returns (uint)  {
+        uint rewardFromParticipants = eventParticipantNumber() / events[eventId].expectedParticipants;
+        return (rewardFromParticipants + rewardFromFeedback()) * 10000;
+    }
+
+    function keepCommittedMemberAsCommittedMember(address member) private {
+        members[member].lastEventRewards += members[member].currentEventRewards;
+        members[member].currentEventRewards = 0;
+    }
+
+    function transformCommittedMemberToStandardMember(address member) private {
+        transferTotalRewardToMember(member);
+        delete members[member];
+    }
+    function transferTotalRewardToMember(address member) private {
+        uint totalReward = members[member].currentEventRewards + members[member].lastEventRewards;
+        token.transfer(member,totalReward);
+    }
+
+    function decreaseCommittedMemberCommitment() private {
+        members[msg.sender].eventsToCommit--;
+    }
+
+    function moveToNextEvent() private {
         events[eventId].open = false;
         eventId++;
     }
 
-
-
-    function updateEvent(uint feedback) external {
-        require(events[eventId].open == true,"To give your feedback, an event must be active");
-        require(feedback > 0, "feedback must be at least equal to 1");
-        if (isCommittedMember() && hasNotGivenHisFeedbackYet()){
-            members[msg.sender].eventsToCommit--;
-            events[eventId].committedParticipants.push(msg.sender);
-        }
-        if (hasNotGivenHisFeedbackYet()){
-            addMemberAsEventParticipant();
-        }
-
-        events[eventId].feedbacks[msg.sender] = feedback;
-        events[eventId].rewards = assignReward();
-
-        for (uint i=0;i<events[eventId].committedParticipants.length;i++){
-            members[events[eventId].committedParticipants[i]].currentEventRewards = events[eventId].rewards / events[eventId].committedParticipants.length;
-        }
-
-    }
-
     function addMemberAsEventParticipant() private {
-        events[eventId].participants.push(msg.sender);
+        isCommittedMember() ? events[eventId].committedParticipants.push(msg.sender) : events[eventId].standardParticipants.push(msg.sender);
     }
 
-    function numberOfEventParticipants() private view returns (uint){
-        return events[eventId].participants.length;
+    function eventParticipantNumber() private view returns (uint){
+        return events[eventId].standardParticipants.length + eventCommittedParticipantNumber();
     }
 
-    function assignReward() private view returns (uint)  {
-        uint rewardFromParticipants = numberOfEventParticipants() / events[eventId].expectedParticipants;
-        return (rewardFromParticipants + rewardFromFeedback()) * 10000;
+    function eventCommittedParticipantNumber() private view returns (uint) {
+        return events[eventId].committedParticipants.length;
     }
 
     function rewardFromFeedback() private view returns (uint) {
-       return numberOfEventParticipants() > 0 ? meanFeedback() : 0;
+       return eventParticipantNumber() > 0 ? meanFeedback() : 0;
     }
 
     function meanFeedback() private view returns (uint){
         uint totalFeedback;
-        for(uint i=0;i<numberOfEventParticipants() ;i++){
-            totalFeedback += events[eventId].feedbacks[events[eventId].participants[i]];
-        }
-        return totalFeedback / numberOfEventParticipants() ;
+        totalFeedback += sumFeedbacksFrom(events[eventId].standardParticipants);
+        totalFeedback += sumFeedbacksFrom(events[eventId].committedParticipants);
+        return totalFeedback / eventParticipantNumber() ;
     }
 
+    function sumFeedbacksFrom(address[] memory people) private view returns(uint) {
+        uint totalFeedback = 0;
+        for(uint i=0;i< people.length ;i++){
+            totalFeedback += events[eventId].feedbacks[people[i]];
+        }
+        return totalFeedback;
+    }
     function memberHasFinishedHisCommitment(address committedMember) private view returns (bool) {
         return members[committedMember].eventsToCommit == 0;
     }
@@ -121,6 +142,11 @@ contract Community {
         return events[eventId].feedbacks[msg.sender] == 0;
     }
 
+    function initializeEvent(uint expectedPeople) private {
+        Event storage newEvent = events[eventId];
+        newEvent.expectedParticipants = expectedPeople;
+        newEvent.open = true;
+    }
 }
 
 
