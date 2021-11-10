@@ -21,9 +21,8 @@ contract('Community', (accounts) => {
 
         return {
             active: event['0'],
-            participants: event['1'].toNumber(),
-            expectedParticipants: event['2'].toNumber(),
-            reward: event['3'].toNumber()
+            expectedParticipants: event['1'].toNumber(),
+            reward: event['2'].toNumber()
         }
 
     }

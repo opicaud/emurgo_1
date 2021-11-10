@@ -33,28 +33,23 @@ contract TestCommunity {
     }
 
     function test_event_should_have_a_number_of_expected_participants() public{
-        (,,uint expectedParticipants,) = community.events(0);
+        (,uint expectedParticipants,) = community.events(0);
         Assert.equal(expectedParticipants,10, "Error : incorrect number of expected participants");
     }
 
     function test_event_should_be_opened() public {
-        (bool opened,,,) = community.events(0);
+        (bool opened,,) = community.events(0);
         Assert.equal(opened, true, "Error : after starting an event, event must be opened");
     }
 
-    function test_event_should_have_the_number_of_participants() public {
-        (,uint participants,,) = community.events(0);
-        Assert.equal(participants, 1,"Error : incorrect number of participants");
-    }
-
     function test_event_should_have_a_reward_calculus() public {
-        (,,,uint reward) = community.events(0);
+        (,,uint reward) = community.events(0);
         Assert.equal(reward, 50000,"Error : incorrect rewards");
     }
 
     function test_event_should_be_closed() public {
         community.closeEvent();
-        (bool openeded,,,) = community.events(0);
+        (bool openeded,,) = community.events(0);
         Assert.equal(openeded, false, "event should be closed");
         (,uint reward,uint lastEventRewards) = community.members(address (this));
         Assert.equal(lastEventRewards, 50000,"Error : incorrect reward");

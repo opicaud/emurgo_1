@@ -13,11 +13,10 @@ contract Community {
 
     struct Event {
         bool open;
-        uint participants;
         uint expectedParticipants;
         uint rewards;
         address[] committedParticipants;
-        address[] voters;
+        address[] participants;
         mapping(address => uint) feedbacks;
     }
     uint public eventId ;
@@ -87,25 +86,24 @@ contract Community {
 
 
     function addMemberAsEventParticipant() private {
-        events[eventId].participants++;
-        events[eventId].voters.push(msg.sender);
+        events[eventId].participants.push(msg.sender);
     }
 
     function assignReward() private view returns (uint)  {
-        uint rewardFromParticipants = events[eventId].participants / events[eventId].expectedParticipants;
+        uint rewardFromParticipants = events[eventId].participants.length / events[eventId].expectedParticipants;
         return (rewardFromParticipants + rewardFromFeedback()) * 10000;
     }
 
     function rewardFromFeedback() private view returns (uint) {
-       return events[eventId].participants > 0 ? meanFeedback() : 0;
+       return events[eventId].participants.length > 0 ? meanFeedback() : 0;
     }
 
     function meanFeedback() private view returns (uint){
         uint totalFeedback;
-        for(uint i=0;i<events[eventId].participants;i++){
-            totalFeedback += events[eventId].feedbacks[events[eventId].voters[i]];
+        for(uint i=0;i<events[eventId].participants.length ;i++){
+            totalFeedback += events[eventId].feedbacks[events[eventId].participants[i]];
         }
-        return totalFeedback / events[eventId].participants ;
+        return totalFeedback / events[eventId].participants.length ;
     }
 
     function memberHasFinishedHisCommitment(address committedMember) private view returns (bool) {
