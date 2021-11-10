@@ -84,26 +84,29 @@ contract Community {
 
     }
 
-
     function addMemberAsEventParticipant() private {
         events[eventId].participants.push(msg.sender);
     }
 
+    function numberOfEventParticipants() private view returns (uint){
+        return events[eventId].participants.length;
+    }
+
     function assignReward() private view returns (uint)  {
-        uint rewardFromParticipants = events[eventId].participants.length / events[eventId].expectedParticipants;
+        uint rewardFromParticipants = numberOfEventParticipants() / events[eventId].expectedParticipants;
         return (rewardFromParticipants + rewardFromFeedback()) * 10000;
     }
 
     function rewardFromFeedback() private view returns (uint) {
-       return events[eventId].participants.length > 0 ? meanFeedback() : 0;
+       return numberOfEventParticipants() > 0 ? meanFeedback() : 0;
     }
 
     function meanFeedback() private view returns (uint){
         uint totalFeedback;
-        for(uint i=0;i<events[eventId].participants.length ;i++){
+        for(uint i=0;i<numberOfEventParticipants() ;i++){
             totalFeedback += events[eventId].feedbacks[events[eventId].participants[i]];
         }
-        return totalFeedback / events[eventId].participants.length ;
+        return totalFeedback / numberOfEventParticipants() ;
     }
 
     function memberHasFinishedHisCommitment(address committedMember) private view returns (bool) {
